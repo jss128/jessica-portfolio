@@ -166,8 +166,192 @@ function initStrands(){
   });
 }
 
+// ---------- SLIDESHOW (project pages with an embedded deck) ----------
+// slides: array of {src, alt}. Renders a click-through viewer with
+// prev/next, keyboard arrows, a counter, and clickable dots.
+function initSlideshow(containerId, slides){
+  const el = document.getElementById(containerId);
+  if(!el || !slides || !slides.length) return;
+
+  let i = 0;
+
+  el.innerHTML = `
+    <div class="ss-frame">
+      <img class="ss-img" src="${slides[0].src}" alt="${slides[0].alt || ""}">
+      <button class="ss-arrow ss-prev" aria-label="Previous slide">&#8249;</button>
+      <button class="ss-arrow ss-next" aria-label="Next slide">&#8250;</button>
+      <div class="ss-counter">1 / ${slides.length}</div>
+    </div>
+    <div class="ss-dots"></div>
+  `;
+
+  const img = el.querySelector(".ss-img");
+  const counter = el.querySelector(".ss-counter");
+  const dotsWrap = el.querySelector(".ss-dots");
+
+  slides.forEach((s, idx) => {
+    const dot = document.createElement("button");
+    dot.className = "ss-dot";
+    dot.setAttribute("aria-label", "Go to slide " + (idx + 1));
+    dot.addEventListener("click", () => show(idx));
+    dotsWrap.appendChild(dot);
+  });
+  const dots = el.querySelectorAll(".ss-dot");
+
+  function show(idx){
+    i = (idx + slides.length) % slides.length;
+    img.src = slides[i].src;
+    img.alt = slides[i].alt || "";
+    counter.textContent = (i + 1) + " / " + slides.length;
+    dots.forEach((d, k) => d.classList.toggle("active", k === i));
+  }
+
+  el.querySelector(".ss-prev").addEventListener("click", () => show(i - 1));
+  el.querySelector(".ss-next").addEventListener("click", () => show(i + 1));
+
+  el.setAttribute("tabindex", "0");
+  el.addEventListener("keydown", e => {
+    if(e.key === "ArrowLeft") show(i - 1);
+    if(e.key === "ArrowRight") show(i + 1);
+  });
+
+  show(0);
+}
+
+// ---------- PLAYABLE WORDLE (about.html) ----------
+function initAboutWordle(){
+  const el = document.getElementById("wordleGame");
+  if(!el) return;
+
+  const ANSWER = "ABOUT";
+  const ROWS = 6;
+  const keyRows = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["ENTER","Z","X","C","V","B","N","M","BACK"],
+  ];
+
+  let guesses = [];
+  let current = "";
+  let done = false;
+  const keyState = {};
+
+  el.innerHTML = `
+    <div class="wg-message" id="wgMessage">Guess the word — 5 letters</div>
+    <div class="wg-grid" id="wgGrid"></div>
+    <div class="wg-keyboard" id="wgKeyboard"></div>
+  `;
+  const gridEl = el.querySelector("#wgGrid");
+  const msgEl = el.querySelector("#wgMessage");
+  const kbEl = el.querySelector("#wgKeyboard");
+
+  for(let r=0;r<ROWS;r++){
+    const row = document.createElement("div");
+    row.className = "wg-row";
+    row.id = "wg-row-" + r;
+    for(let c=0;c<5;c++){
+      const tile = document.createElement("div");
+      tile.className = "wg-tile";
+      tile.id = `wg-${r}-${c}`;
+      row.appendChild(tile);
+    }
+    gridEl.appendChild(row);
+  }
+
+  keyRows.forEach(row => {
+    const krow = document.createElement("div");
+    krow.className = "wg-krow";
+    row.forEach(k => {
+      const btn = document.createElement("button");
+      btn.className = "wg-key" + (k.length > 1 ? " wide" : "");
+      btn.textContent = k === "BACK" ? "⌫" : k;
+      btn.id = "wg-key-" + k;
+      btn.addEventListener("click", () => handleKey(k));
+      krow.appendChild(btn);
+    });
+    kbEl.appendChild(krow);
+  });
+
+  function handleKey(k){
+    if(done) return;
+    if(k === "ENTER"){ submit(); return; }
+    if(k === "BACK"){ current = current.slice(0,-1); render(); return; }
+    if(current.length < 5 && /^[A-Z]$/.test(k)){ current += k; render(); }
+  }
+
+  function render(){
+    const r = guesses.length;
+    for(let c=0;c<5;c++){
+      const tile = document.getElementById(`wg-${r}-${c}`);
+      tile.textContent = current[c] || "";
+      tile.classList.toggle("filled", !!current[c]);
+    }
+  }
+
+  function submit(){
+    if(current.length !== 5){
+      msgEl.textContent = "Needs to be 5 letters";
+      return;
+    }
+    const guess = current;
+    const r = guesses.length;
+    const result = new Array(5).fill("b");
+    const answerLetters = ANSWER.split("");
+
+    // first pass: greens
+    for(let c=0;c<5;c++){
+      if(guess[c] === ANSWER[c]){ result[c] = "g"; answerLetters[c] = null; }
+    }
+    // second pass: yellows
+    for(let c=0;c<5;c++){
+      if(result[c] === "g") continue;
+      const idx = answerLetters.indexOf(guess[c]);
+      if(idx !== -1){ result[c] = "y"; answerLetters[idx] = null; }
+    }
+
+    for(let c=0;c<5;c++){
+      const tile = document.getElementById(`wg-${r}-${c}`);
+      tile.classList.add(result[c]);
+      const letter = guess[c];
+      const keyBtn = document.getElementById("wg-key-" + letter);
+      if(keyBtn){
+        const rank = {b:0, y:1, g:2};
+        if(!keyState[letter] || rank[result[c]] > rank[keyState[letter]]){
+          keyState[letter] = result[c];
+          keyBtn.classList.remove("g","y","b");
+          keyBtn.classList.add(result[c]);
+        }
+      }
+    }
+
+    guesses.push(guess);
+
+    if(guess === ANSWER){
+      done = true;
+      const msgs = ["Splendid!","Impressive.","You got it!","Nice work."];
+      msgEl.textContent = msgs[Math.min(guesses.length-1, msgs.length-1)] + " That's me.";
+    } else if(guesses.length >= ROWS){
+      done = true;
+      msgEl.textContent = `The word was ${ANSWER}.`;
+    } else {
+      msgEl.textContent = "";
+    }
+    current = "";
+  }
+
+  document.addEventListener("keydown", e => {
+    if(done) return;
+    if(!document.getElementById("wordleGame")) return;
+    const k = e.key.toUpperCase();
+    if(k === "ENTER") handleKey("ENTER");
+    else if(k === "BACKSPACE") handleKey("BACK");
+    else if(/^[A-Z]$/.test(k)) handleKey(k);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initHeroTiles();
   initConnGrid();
   initStrands();
+  initAboutWordle();
 });

@@ -1,3 +1,4 @@
+Main · JS
 // ---------- HERO TILES (index.html) ----------
 function initHeroTiles(){
   const el = document.getElementById("heroTiles");
@@ -12,37 +13,37 @@ function initHeroTiles(){
     el.appendChild(tile);
   });
 }
-
+ 
 // ---------- CONNECTIONS GRID (work.html) ----------
 // Drawn from Jessica's resume / UC activities list — internships, DECA, and school leadership.
 function initConnGrid(){
   const grid = document.getElementById("connGrid");
   if(!grid) return;
-
+ 
   const items = [
     // Technical & AI internships
     {cat:"yellow", role:"UI/UX Design Intern", org:"SpectatorAI", desc:"Designed interactive Figma prototypes and mockups that improved usability and user flow across the site."},
     {cat:"yellow", role:"Pneumonia Detection ML", org:"Inspirit AI", desc:"Built a Python/Keras/TensorFlow model to analyze medical imaging for diagnostic support."},
     {cat:"yellow", role:"Best Capstone Project", org:"Mark Cuban AI Foundation", desc:"Led a team to an award-winning proposal for an AI tool that detects plagiarism in music."},
     {cat:"yellow", role:"Coding Instructor", org:"Code Ninjas", desc:"250+ hours teaching intro coding and STEM to kids ages 6–7, adapting lessons on the fly."},
-
+ 
     // Business & marketing (DECA + internships)
     {cat:"green", role:"Healthcare IT Campaign", org:"DECA — R4 Solutions", desc:"35-week marketing plan: 73% traffic growth, 530+ leads, 3.8x ROI. Placed 1st in state."},
     {cat:"green", role:"Project Manager", org:"DECA — BayROC", desc:"Led a nonprofit recycling campaign to a 41% increase in self-reported reuse behavior."},
     {cat:"green", role:"Marketing Intern", org:"Path Mentors", desc:"Generated 5+ leads a week for college workshops through consistent in-person outreach."},
     {cat:"green", role:"Creative Team Officer", org:"WAI Nonprofit", desc:"Created social content raising wildfire awareness with a team of 8, driving engagement."},
-
+ 
     // School leadership
     {cat:"blue", role:"VP of Marketing", org:"Jewelry Making Club", desc:"Designed all promo materials and ran advertising strategy — posts reached 20k+ views."},
     {cat:"blue", role:"Freshman Mentor Leader", org:"Link Crew", desc:"Mentored 300+ incoming freshmen through their transition to high school."},
     {cat:"blue", role:"CCC Committee Chair", org:"Octagon", desc:"Led a fundraising auction benefiting the Leukemia & Lymphoma Society."},
     {cat:"blue", role:"Varsity Member", org:"Speech & Debate", desc:"Competed at tournaments across the Bay Area, including the Cal Invitational at UC Berkeley."},
-
+ 
     // Athletics & camp
     {cat:"purple", role:"Varsity Player", org:"Field Hockey", desc:"Center defense/midfielder — Most Valuable Defense (x2), All-League, and Golden Stick awards."},
     {cat:"purple", role:"Cabin Leader", org:"Walden West", desc:"Supervised and mentored 5th graders through a week-long science camp."},
   ];
-
+ 
   items.forEach(item => {
     const btn = document.createElement("button");
     btn.className = "conn-tile " + item.cat;
@@ -58,7 +59,7 @@ function initConnGrid(){
     grid.appendChild(btn);
   });
 }
-
+ 
 // ---------- STRANDS GAME (design.html) ----------
 // A 12x8 letter grid with five hidden project names. Click any letter in a
 // highlighted word (or the word in the sidebar) to open that case study.
@@ -66,9 +67,9 @@ function initStrands(){
   const gridEl = document.getElementById("strandGrid");
   const listEl = document.getElementById("strandList");
   if(!gridEl) return;
-
+ 
   const COLS = 12, ROWS = 8;
-
+ 
   const words = [
     {word:"R4SOLUTIONS", row:0, col:0, dir:"across", href:"r4solutions.html", label:"R4 Solutions", sub:"DECA · healthcare IT campaign"},
     {word:"BAYROC",      row:2, col:3, dir:"across", href:"bayroc.html",      label:"BayROC",       sub:"DECA · nonprofit reuse campaign"},
@@ -76,13 +77,13 @@ function initStrands(){
     {word:"JEWELRY",     row:6, col:0, dir:"across", href:"jewelryclub.html", label:"Jewelry Club", sub:"Marketing & brand collateral"},
     {word:"NAILS",       row:7, col:4, dir:"across", href:"nails.html",      label:"Nails by Jessi", sub:"Press-on nail business"},
   ];
-
+ 
   // Build empty letter matrix
   const matrix = [];
   for(let r=0;r<ROWS;r++){
     matrix.push(new Array(COLS).fill(null));
   }
-
+ 
   // Place words
   const cellWordMap = {}; // "r-c" -> word string
   words.forEach(w => {
@@ -93,7 +94,7 @@ function initStrands(){
       cellWordMap[r+"-"+c] = w.word;
     }
   });
-
+ 
   // Fill remaining cells with pseudo-random letters (seeded for consistency)
   const filler = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
   let seed = 42;
@@ -105,11 +106,11 @@ function initStrands(){
       }
     }
   }
-
+ 
   // Render grid
   const cellRefs = {}; // word -> [cell elements]
   words.forEach(w => cellRefs[w.word] = []);
-
+ 
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const div = document.createElement("div");
@@ -124,15 +125,15 @@ function initStrands(){
       gridEl.appendChild(div);
     }
   }
-
+ 
   function highlight(word, on){
     (cellRefs[word] || []).forEach(el => el.classList.toggle("hovered", on));
     const btn = listEl.querySelector(`[data-word="${word}"]`);
     if(btn) btn.classList.toggle("hovered", on);
   }
-
+ 
   function goTo(href){ window.location.href = href; }
-
+ 
   // Grid interactions
   gridEl.addEventListener("mouseover", e => {
     const w = e.target.dataset && e.target.dataset.word;
@@ -149,7 +150,7 @@ function initStrands(){
     (cellRefs[w] || []).forEach(el => el.classList.add("found"));
     if(meta) setTimeout(() => goTo(meta.href), 220);
   });
-
+ 
   // Sidebar list
   words.forEach(w => {
     const btn = document.createElement("button");
@@ -165,16 +166,16 @@ function initStrands(){
     listEl.appendChild(btn);
   });
 }
-
+ 
 // ---------- SLIDESHOW (project pages with an embedded deck) ----------
 // slides: array of {src, alt}. Renders a click-through viewer with
 // prev/next, keyboard arrows, a counter, and clickable dots.
 function initSlideshow(containerId, slides){
   const el = document.getElementById(containerId);
   if(!el || !slides || !slides.length) return;
-
+ 
   let i = 0;
-
+ 
   el.innerHTML = `
     <div class="ss-frame">
       <img class="ss-img" src="${slides[0].src}" alt="${slides[0].alt || ""}">
@@ -184,11 +185,11 @@ function initSlideshow(containerId, slides){
     </div>
     <div class="ss-dots"></div>
   `;
-
+ 
   const img = el.querySelector(".ss-img");
   const counter = el.querySelector(".ss-counter");
   const dotsWrap = el.querySelector(".ss-dots");
-
+ 
   slides.forEach((s, idx) => {
     const dot = document.createElement("button");
     dot.className = "ss-dot";
@@ -197,7 +198,7 @@ function initSlideshow(containerId, slides){
     dotsWrap.appendChild(dot);
   });
   const dots = el.querySelectorAll(".ss-dot");
-
+ 
   function show(idx){
     i = (idx + slides.length) % slides.length;
     img.src = slides[i].src;
@@ -205,153 +206,21 @@ function initSlideshow(containerId, slides){
     counter.textContent = (i + 1) + " / " + slides.length;
     dots.forEach((d, k) => d.classList.toggle("active", k === i));
   }
-
+ 
   el.querySelector(".ss-prev").addEventListener("click", () => show(i - 1));
   el.querySelector(".ss-next").addEventListener("click", () => show(i + 1));
-
+ 
   el.setAttribute("tabindex", "0");
   el.addEventListener("keydown", e => {
     if(e.key === "ArrowLeft") show(i - 1);
     if(e.key === "ArrowRight") show(i + 1);
   });
-
+ 
   show(0);
 }
-
-// ---------- PLAYABLE WORDLE (about.html) ----------
-function initAboutWordle(){
-  const el = document.getElementById("wordleGame");
-  if(!el) return;
-
-  const ANSWER = "ABOUT";
-  const ROWS = 6;
-  const keyRows = [
-    ["Q","W","E","R","T","Y","U","I","O","P"],
-    ["A","S","D","F","G","H","J","K","L"],
-    ["ENTER","Z","X","C","V","B","N","M","BACK"],
-  ];
-
-  let guesses = [];
-  let current = "";
-  let done = false;
-  const keyState = {};
-
-  el.innerHTML = `
-    <div class="wg-message" id="wgMessage">Guess the word — 5 letters</div>
-    <div class="wg-grid" id="wgGrid"></div>
-    <div class="wg-keyboard" id="wgKeyboard"></div>
-  `;
-  const gridEl = el.querySelector("#wgGrid");
-  const msgEl = el.querySelector("#wgMessage");
-  const kbEl = el.querySelector("#wgKeyboard");
-
-  for(let r=0;r<ROWS;r++){
-    const row = document.createElement("div");
-    row.className = "wg-row";
-    row.id = "wg-row-" + r;
-    for(let c=0;c<5;c++){
-      const tile = document.createElement("div");
-      tile.className = "wg-tile";
-      tile.id = `wg-${r}-${c}`;
-      row.appendChild(tile);
-    }
-    gridEl.appendChild(row);
-  }
-
-  keyRows.forEach(row => {
-    const krow = document.createElement("div");
-    krow.className = "wg-krow";
-    row.forEach(k => {
-      const btn = document.createElement("button");
-      btn.className = "wg-key" + (k.length > 1 ? " wide" : "");
-      btn.textContent = k === "BACK" ? "⌫" : k;
-      btn.id = "wg-key-" + k;
-      btn.addEventListener("click", () => handleKey(k));
-      krow.appendChild(btn);
-    });
-    kbEl.appendChild(krow);
-  });
-
-  function handleKey(k){
-    if(done) return;
-    if(k === "ENTER"){ submit(); return; }
-    if(k === "BACK"){ current = current.slice(0,-1); render(); return; }
-    if(current.length < 5 && /^[A-Z]$/.test(k)){ current += k; render(); }
-  }
-
-  function render(){
-    const r = guesses.length;
-    for(let c=0;c<5;c++){
-      const tile = document.getElementById(`wg-${r}-${c}`);
-      tile.textContent = current[c] || "";
-      tile.classList.toggle("filled", !!current[c]);
-    }
-  }
-
-  function submit(){
-    if(current.length !== 5){
-      msgEl.textContent = "Needs to be 5 letters";
-      return;
-    }
-    const guess = current;
-    const r = guesses.length;
-    const result = new Array(5).fill("b");
-    const answerLetters = ANSWER.split("");
-
-    // first pass: greens
-    for(let c=0;c<5;c++){
-      if(guess[c] === ANSWER[c]){ result[c] = "g"; answerLetters[c] = null; }
-    }
-    // second pass: yellows
-    for(let c=0;c<5;c++){
-      if(result[c] === "g") continue;
-      const idx = answerLetters.indexOf(guess[c]);
-      if(idx !== -1){ result[c] = "y"; answerLetters[idx] = null; }
-    }
-
-    for(let c=0;c<5;c++){
-      const tile = document.getElementById(`wg-${r}-${c}`);
-      tile.classList.add(result[c]);
-      const letter = guess[c];
-      const keyBtn = document.getElementById("wg-key-" + letter);
-      if(keyBtn){
-        const rank = {b:0, y:1, g:2};
-        if(!keyState[letter] || rank[result[c]] > rank[keyState[letter]]){
-          keyState[letter] = result[c];
-          keyBtn.classList.remove("g","y","b");
-          keyBtn.classList.add(result[c]);
-        }
-      }
-    }
-
-    guesses.push(guess);
-
-    if(guess === ANSWER){
-      done = true;
-      const msgs = ["Splendid!","Impressive.","You got it!","Nice work."];
-      msgEl.textContent = msgs[Math.min(guesses.length-1, msgs.length-1)] + " That's me.";
-    } else if(guesses.length >= ROWS){
-      done = true;
-      msgEl.textContent = `The word was ${ANSWER}.`;
-    } else {
-      msgEl.textContent = "";
-    }
-    current = "";
-  }
-
-  document.addEventListener("keydown", e => {
-    if(done) return;
-    if(!document.getElementById("wordleGame")) return;
-    const k = e.key.toUpperCase();
-    if(k === "ENTER") handleKey("ENTER");
-    else if(k === "BACKSPACE") handleKey("BACK");
-    else if(/^[A-Z]$/.test(k)) handleKey(k);
-  });
-}
-
+ 
 document.addEventListener("DOMContentLoaded", () => {
   initHeroTiles();
   initConnGrid();
   initStrands();
-  initAboutWordle();
 });

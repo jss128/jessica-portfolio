@@ -59,7 +59,7 @@ function initConnGrid(){
   });
 }
 
-// ---------- STRANDS GAME (design.html) ----------
+// ---------- STRANDS GAME (projects.html) ----------
 // A 12x8 letter grid with five hidden project names. Click any letter in a
 // highlighted word (or the word in the sidebar) to open that case study.
 function initStrands(){

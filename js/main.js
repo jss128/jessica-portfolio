@@ -59,7 +59,7 @@ function initConnGrid(){
   });
 }
 
-// ---------- STRANDS GAME (projects.html) ----------
+// ---------- STRANDS GAME (design.html) ----------
 // A 12x8 letter grid with five hidden project names. Click any letter in a
 // highlighted word (or the word in the sidebar) to open that case study.
 function initStrands(){
@@ -223,3 +223,111 @@ document.addEventListener("DOMContentLoaded", () => {
   initConnGrid();
   initStrands();
 });
+
+// ---------- BEE CURSOR + DASHED FLIGHT PATH ----------
+// An original bee that replaces the mouse pointer and leaves a fading dashed trail.
+// Desktop (fine pointer) only; skipped for touch devices and reduced-motion users.
+function initBeeCursor(){
+  if(!window.matchMedia("(pointer: fine)").matches) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    html.bee-on, html.bee-on *{cursor:none !important;}
+    #beeTrail{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9998;}
+    #beeCursor{
+      position:fixed;left:0;top:0;width:44px;height:44px;margin:-22px 0 0 -22px;
+      pointer-events:none;z-index:9999;will-change:transform;
+    }
+    #beeCursor svg{width:100%;height:100%;overflow:visible;}
+    #beeCursor .wing{transform-origin:50% 60%;animation:beeflap .12s ease-in-out infinite alternate;}
+    #beeCursor .wing.w2{animation-delay:.06s;}
+    @keyframes beeflap{from{transform:scaleY(1);}to{transform:scaleY(.55);}}
+  `;
+  document.head.appendChild(style);
+
+  const bee = document.createElement("div");
+  bee.id = "beeCursor";
+  bee.innerHTML = `
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse class="wing" cx="24" cy="20" rx="11" ry="15" transform="rotate(-25 24 20)" fill="#dff1ff" fill-opacity=".85" stroke="#8fb8d8" stroke-width="1.5"/>
+      <ellipse class="wing w2" cx="40" cy="20" rx="11" ry="15" transform="rotate(25 40 20)" fill="#dff1ff" fill-opacity=".85" stroke="#8fb8d8" stroke-width="1.5"/>
+      <ellipse cx="32" cy="38" rx="17" ry="14" fill="#f9df6d" stroke="#121213" stroke-width="2.5"/>
+      <path d="M21 31 Q32 36 43 31" stroke="#121213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M17.5 40 Q32 46 46.5 40" stroke="#121213" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M22 48 Q32 53 42 48" stroke="#121213" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="32" cy="22" r="9" fill="#f9df6d" stroke="#121213" stroke-width="2.5"/>
+      <circle cx="28.5" cy="21" r="1.7" fill="#121213"/>
+      <circle cx="35.5" cy="21" r="1.7" fill="#121213"/>
+      <path d="M29 25.5 Q32 28 35 25.5" stroke="#121213" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M28 14 Q25 7 21 6 M36 14 Q39 7 43 6" stroke="#121213" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <circle cx="21" cy="6" r="1.6" fill="#121213"/><circle cx="43" cy="6" r="1.6" fill="#121213"/>
+    </svg>`;
+  document.body.appendChild(bee);
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "beeTrail";
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  function resize(){
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const TRAIL_MS = 1400;
+  let mouse = {x: -100, y: -100};
+  let pos = {x: -100, y: -100};
+  let started = false;
+  let tilt = 0;
+  const points = [];
+
+  window.addEventListener("mousemove", e => {
+    mouse.x = e.clientX; mouse.y = e.clientY;
+    if(!started){ pos.x = mouse.x; pos.y = mouse.y; started = true; document.documentElement.classList.add("bee-on"); }
+  });
+  document.addEventListener("mouseleave", () => { bee.style.opacity = 0; });
+  document.addEventListener("mouseenter", () => { bee.style.opacity = 1; });
+
+  function frame(now){
+    if(started){
+      const dx = mouse.x - pos.x, dy = mouse.y - pos.y;
+      pos.x += dx * 0.22; pos.y += dy * 0.22;
+      tilt += (Math.max(-30, Math.min(30, dx * 1.2)) - tilt) * 0.2;
+      bee.style.transform = `translate(${pos.x}px, ${pos.y}px) rotate(${tilt}deg)`;
+
+      const last = points[points.length - 1];
+      if(!last || Math.hypot(pos.x - last.x, pos.y - last.y) > 3){
+        points.push({x: pos.x, y: pos.y, t: now});
+      }
+    }
+    while(points.length && now - points[0].t > TRAIL_MS) points.shift();
+
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.setLineDash([7, 9]);
+    let dist = 0;
+    for(let i = 1; i < points.length; i++){
+      const a = points[i-1], b = points[i];
+      const age = (now - b.t) / TRAIL_MS;
+      ctx.globalAlpha = Math.max(0, 0.75 * (1 - age));
+      ctx.strokeStyle = "#c9b458";
+      ctx.lineDashOffset = -dist;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      dist += Math.hypot(b.x - a.x, b.y - a.y);
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+document.addEventListener("DOMContentLoaded", initBeeCursor);
